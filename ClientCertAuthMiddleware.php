@@ -23,8 +23,11 @@ class ClientCertAuthMiddleware
             return response()->view('errors.400', ['error' => 'The Client Certificate middleware requires a HTTPS connection.'], 400);
         }
 
-        // the CN from the client certificate forms the username
-        $cn = Request::server('SSL_CLIENT_S_CN');
+        // the DN from the client certificate contains the CN, which forms the username
+        $dn = Request::server('SSL_CLIENT_S_DN');
+        preg_match('/cn=([^,\/]+)/i', $dn, $matches);
+        $cn = isset($matches[1]) ? $matches[1] : null;
+
         if (!$cn) {
             return response()->view('errors.400', ['error' => 'Failed to get the certificate CN - did you provide a certificate in the request?'], 400);
         }
